@@ -1,8 +1,18 @@
-
+#include <modo_ia.h>
+#include<math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+static void limpar_buffer_main(void) {
+    int c;
+    while ((c = getchar()) != 'n\' && c ! EOF);
+
+}
+
 
 int main() {
     int opcao;
+    int limite = (int)ceil(log2(1000));
 
     do {
         printf("\n============================\n");
@@ -15,6 +25,17 @@ int main() {
         printf("3 - Ver ranking\n");
         printf("0 - Sair\n");
 
+
+        printf(" opcao: ")
+
+        if (scanf("%d", &opcao) != 1) {
+        limpar_buffer_main();
+        opcao = -1;
+        continue;
+        }
+
+        limpar_buffer_main();
+
         printf("\nEscolha uma opcao: ");
         scanf("%d", &opcao);
 
@@ -25,6 +46,7 @@ int main() {
 
             case 2:
                 printf("Modo IA selecionado!\n");
+                modo_ia(limite, 1, 1000)
                 break;
 
             case 3:
