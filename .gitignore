@@ -1,0 +1,10 @@
+# Executaveis
+jogo
+jogo_novo
+teste
+
+# Arquivos objeto
+*.o
+
+# Arquivos temporarios
+*.tmp

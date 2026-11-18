@@ -1,12 +1,16 @@
+
 #include <stdio.h>
 #include "modo_ia.h"
 
 static void limpar_buffer_ia(void) {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+
+    while ((c = getchar()) != '\n' && c != EOF) {
+    }
 }
 
-static void exibir_cabecalho_ia(int nivel_min, int nivel_max, int limite_max) {
+static void exibir_cabecalho_ia(int nivel_min, int nivel_max,
+                                int limite_max) {
     printf("\n");
     printf("+======================================================+\n");
     printf("|       CIPHER TERMINAL -- MODO IA                    |\n");
@@ -21,27 +25,31 @@ static void exibir_cabecalho_ia(int nivel_min, int nivel_max, int limite_max) {
 
 static char le_resposta_ia(void) {
     char resp;
-    int valido = 0;
 
-    while (!valido) {
+    while (1) {
         printf("  > O numero que voce pensou e [>] maior, [<] menor ou [=] igual? ");
+
         if (scanf(" %c", &resp) != 1) {
+            if (feof(stdin)) {
+                return '\0';
+            }
+
             limpar_buffer_ia();
             continue;
         }
+
         limpar_buffer_ia();
 
         if (resp == '>' || resp == '<' || resp == '=') {
-            valido = 1;
-        } else {
-            printf("  [!] Entrada invalida. Digite apenas >, < ou =.\n");
+            return resp;
         }
-    }
 
-    return resp;
+        printf("  [!] Entrada invalida. Digite apenas >, < ou =.\n");
+    }
 }
 
-static void exibir_resultado_ia(int palpite, int tentativas, int limite_max) {
+static void exibir_resultado_ia(int palpite, int tentativas,
+                                int limite_max) {
     printf("\n");
     printf("+======================================================+\n");
     printf("|  CIPHER ACERTOU: %-5d                               |\n", palpite);
@@ -49,7 +57,7 @@ static void exibir_resultado_ia(int palpite, int tentativas, int limite_max) {
            tentativas, limite_max);
 
     if (tentativas <= limite_max / 2) {
-        printf("|  Avaliacao : DOMINACAO TOTAL -- busca otima.        |\n");
+        printf("|  Avaliacao : DOMINACAO TOTAL -- busca eficiente.    |\n");
     } else if (tentativas < limite_max) {
         printf("|  Avaliacao : EFICIENTE -- dentro do esperado.       |\n");
     } else {
@@ -60,58 +68,68 @@ static void exibir_resultado_ia(int palpite, int tentativas, int limite_max) {
     printf("+======================================================+\n\n");
 }
 
-static int executar_busca_binaria(int low, int high, int limite_max) {
-    int tentativas = 0;
+static int executar_busca_binaria(int low, int high,
+                                  int limite_max, int *tentativas) {
     int palpite;
     char resposta;
 
-    do {
+    *tentativas = 0;
+
+    while (*tentativas < limite_max && low <= high) {
         palpite = low + (high - low) / 2;
-        tentativas++;
+        (*tentativas)++;
 
         printf("\n  [Tentativa %2d | intervalo atual: %d - %d]\n",
-               tentativas, low, high);
+               *tentativas, low, high);
         printf("  Cipher diz: o numero e %d?\n", palpite);
 
         resposta = le_resposta_ia();
 
+        if (resposta == '\0') {
+            printf("\n  [!] Entrada encerrada.\n");
+            return -1;
+        }
+
+        if (resposta == '=') {
+            return palpite;
+        }
+
         if (resposta == '>') {
             low = palpite + 1;
-        } else if (resposta == '<') {
+        } else {
             high = palpite - 1;
         }
 
-        if (low > high && resposta != '=') {
-            printf("\n  [!] ALERTA: Cipher detectou inconsistencia nas respostas.\n");
-            printf("      Nenhum numero satisfaz as pistas fornecidas.\n");
-            printf("      Registrando tentativa de trapaca no terminal.\n\n");
+        if (low > high) {
+            printf("\n  [!] Respostas inconsistentes!\n");
+            printf("      Nenhum numero corresponde as suas respostas.\n");
             return -1;
         }
+    }
 
-        if (tentativas == limite_max && resposta != '=') {
-            printf("\n  [!] ALERTA: Limite de %d tentativas atingido.\n", limite_max);
-            printf("      Se a busca binaria esta correta, isso indica\n");
-            printf("      que suas respostas foram inconsistentes.\n\n");
-            return -1;
-        }
-
-    } while (resposta != '=');
-
-    return tentativas;
+    printf("\n  [!] Limite de tentativas atingido.\n");
+    return -1;
 }
 
 void modo_ia(int limite_max, int nivel_min, int nivel_max) {
     int tentativas;
+    int resultado;
+
+    if (nivel_min > nivel_max || limite_max <= 0) {
+        printf("Configuracao invalida para o modo IA.\n");
+        return;
+    }
 
     exibir_cabecalho_ia(nivel_min, nivel_max, limite_max);
 
     printf("  Pensou no numero? Pressione ENTER para comecar.\n");
+
     limpar_buffer_ia();
 
-    tentativas = executar_busca_binaria(nivel_min, nivel_max, limite_max);
+    resultado = executar_busca_binaria(nivel_min, nivel_max,
+                                       limite_max, &tentativas);
 
-    if (tentativas > 0) {
-        exibir_resultado_ia(nivel_min + (nivel_max - nivel_min) / 2,
-                            tentativas, limite_max);
+    if (resultado >= 0) {
+        exibir_resultado_ia(resultado, tentativas, limite_max);
     }
 }
